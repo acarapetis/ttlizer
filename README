@@ -1,0 +1,21 @@
+ttlizer: a simple timetable/schedule optimizer
+
+ttlizer is designed for people who have a large number of activities (for
+example, school classes) they need to attend, where they have the choice of
+many timeslots for each activity/class.
+
+Attempting to find an ideal combination of timeslots manually is a
+time-consuming process that can be automated with a few simple rules.  ttlizer
+currently rates combinations based on the following criteria:
+
+    - Negative weighting for activity clashes
+
+The project is still in very early stages; planned criteria for the future:
+
+    - Negative weighting for large gaps in between activities
+    - Positive weighting for days with no activities schedules
+
+Planned features:
+
+    - Customizable weighting for all criteria
+    - Generation of preference order for individual activities
