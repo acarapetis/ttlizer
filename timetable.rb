@@ -29,7 +29,7 @@ class Timeslot
     end
 
     def <(other)
-        other > this
+        other > self
     end
 
     def <=>(other)
@@ -41,7 +41,7 @@ class Timeslot
     # By how many hours do these two activity slots overlap?
     def overlap(other)
         a, b = self, other
-        return false if a.day != b.day
+        return 0 if a.day != b.day
         a, b = b, a if a > b
 
         val = a.length - (b.time - a.time)
@@ -79,23 +79,31 @@ class Activity
 end
 
 # Recursively build the timetable combinations
-def build_timetables(remaining_activities, timetables)
-    remaining_activities = remaining_activities.dup
-    this_activity = remaining_activities.shift # grab the next activity
-    if timetables.length == 0 # This is the first call in the chain, just recurse with the first activity set
-        return build_timetables(remaining_activities, this_activity.times.map{|x| [x]})
-    elsif remaining_activities.length == 0 # This is the last call in the chain - don't recurse
-        return timetables.map{ |a| this_activity.times.map{ |x| a+[x] }}.flatten(1)
-    else # recurse as usual
-        return build_timetables(remaining_activities, timetables.map{ |a| this_activity.times.map{ |x| a+[x] }}.flatten(1))
+# NOTE: this modifies remaining_activities, should only be called by 
+# generate_timetables or by itself
+def _build_timetables(remaining_activities, timetables)
+    # This implementation is *very* ugly.
+    # TODO: tidy it up!
+    activity = remaining_activities.shift # grab the next activity
+    if timetables.length == 0 
+        # This is the first call in the chain, just recurse with the first 
+        # activity set:
+        return _build_timetables(remaining_activities, activity.times.map{|x| [x]})
+    elsif remaining_activities.length == 0 
+        # This is the last call in the chain - don't recurse
+        return timetables.map{ |a| activity.times.map{ |x| a+[x] }}.flatten(1)
+    else 
+        # recurse as usual
+        return _build_timetables(remaining_activities, 
+                timetables.map{ |a| activity.times.map{ |x| a+[x] }}.flatten(1))
     end
 end
 
 # Generate all possible timetable combinations using the given activity set
 def generate_timetables(activities)
-    timetables = go_deeper(activities, [])
+    timetables = _build_timetables(activities.dup, []) 
     return timetables.map { |sessions| {
-        :clashes    => sessions.combination(2).map{|a,b| a.overlap(b)}.inject(&:+), # Clashing hour count
+        :clashes    => sessions.combination(2).map{|a,b| a.overlap(b)}.inject(&:+),
         :timetable  => sessions
     }}.sort_by {|tt| tt[:clashes]}
 end
