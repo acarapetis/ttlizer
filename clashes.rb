@@ -25,7 +25,8 @@ OptionParser.new do |opts|
     end
 end.parse!
 
-granularity = options[:granularity].to_f || 1
+granularity = options[:granularity].to_f
+granularity = 1 if granularity.nil? or granularity == 0
 
 # Load activities, generate timetables and count clashes
 activities = load_activities_from_simple_yaml ARGF.read
