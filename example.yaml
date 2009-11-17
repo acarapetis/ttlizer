@@ -1,0 +1,28 @@
+# Example activity schedule
+# Format is YAML: http://yaml.org/
+#
+# Lectures: only one choice for these, they're locked in
+Math Lecture 1:
+    - monday 15 1 # 1 hour, starting at 15:00 on mondays
+
+Physics Lecture 1:
+    - tuesday 13 1
+
+Work Shift 1:
+    - monday 9 4
+
+# Lab classes: many options, this is where ttlizer is useful
+Math Lab:
+    - monday 9 2
+    - monday 11 2
+    - monday 14 2
+    - tuesday 9 2
+    - tuesday 11 2
+    - tuesday 15 2
+    - wednesday 10 2
+    - wednesday 14 2
+
+Physics Lab:
+    - monday 14 3
+    - tuesday 14 3
+    - wednesday 14 3
