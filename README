@@ -13,7 +13,7 @@ currently rates combinations based on the following criteria:
 The project is still in very early stages; planned criteria for the future:
 
     - Negative weighting for large gaps in between activities
-    - Positive weighting for days with no activities schedules
+    - Positive weighting for days with no activities scheduled
 
 Planned features:
 
