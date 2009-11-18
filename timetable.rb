@@ -79,6 +79,45 @@ class Activity
     end
 end
 
+# A timetable/schedule (combination of timeslots)
+class Timetable
+    attr_reader :times
+
+    def initialize(times)
+        @times = times
+    end
+
+    # Add a timeslot to the timetable
+    def add_timeslot(timeslot)
+        @times << timeslot
+    end
+
+    # Hours of clashing timeslots/sessions
+    def clashes
+        # TODO: investigate/fix behaviour for 3+ mutually clashing timeslots
+        @times.combination(2).map{|a,b| a.overlap(b)}.inject(&:+)
+    end
+
+    # Flat ASCII Timetable with details
+    def detailed_text
+        @times.sort.join "\n"
+    end
+
+    # Visual "calendar" layout of a set of timeslots (ASCII)
+    def visual_layout
+        ret = (0 .. 18).map{|n| sprintf "|%3i", n}.join('') + "\n"
+        lines = ([[0]*19] * 5).map{|a| a.dup}
+        @times.each do |t|
+            puts "#{DAYS.index(t.day)} #{t.time} #{t.length}"
+            (t.time.floor .. t.time.floor + t.length.floor - 1).each do |n|
+                lines[DAYS.index(t.day)][n] += 1
+            end
+        end
+        ret += lines.map{|a| a.map{|c| c.to_s * 4}.join ''}.join "\n"
+        return ret
+    end
+end
+
 # Recursively build the timetable combinations
 # NOTE: this modifies remaining_activities, should only be called by 
 # generate_timetables or by itself
@@ -103,29 +142,8 @@ end
 # Generate all possible timetable combinations using the given activity set
 def generate_timetables(activities)
     timetables = _build_timetables(activities.dup, []) 
-    return timetables.map { |sessions| {
-        :clashes    => sessions.combination(2).map{|a,b| a.overlap(b)}.inject(&:+),
-        :timetable  => sessions
-    }}.sort_by {|tt| tt[:clashes]}
-end
-
-# Formatted string representation of a set of timeslots
-def format_timetable(timeslots)
-    timeslots.sort.join "\n"
-end
-
-# Visual "calendar" layout of a set of timeslots (ASCII)
-def visual_timetable(timeslots)
-    ret = (0 .. 18).map{|n| sprintf "|%3i", n}.join('') + "\n"
-    lines = ([[0]*19] * 5).map{|a| a.dup}
-    timeslots.each do |t|
-        puts "#{DAYS.index(t.day)} #{t.time} #{t.length}"
-        (t.time.floor .. t.time.floor + t.length.floor - 1).each do |n|
-            lines[DAYS.index(t.day)][n] += 1
-        end
-    end
-    ret += lines.map{|a| a.map{|c| c.to_s * 4}.join ''}.join "\n"
-    return ret
+    return timetables.map       { |timeslots| Timetable.new timeslots }
+                     .sort_by   { |timeslot| timeslot.clashes }
 end
 
 # Create array of activities from YAML (verbose format)
