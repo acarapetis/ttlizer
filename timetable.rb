@@ -58,6 +58,15 @@ class Timeslot
         finish  = time_format(@time + @length)
         return "#{activity}\t#{day_str} @ #{start} to #{finish}"
     end
+
+    # Average number of clashes of timetables that use this timeslot
+    def average_clashes(timetables)
+        # Select all the timetables that include this timeslot:
+        tts = timetables.select{ |t| t.times.include? self }
+
+        # Calculate the arithmetic mean of the number of clashes:
+        return tts.map{ |t| t.clashes }.inject(&:+) / tts.length
+    end
 end
 
 # An activity that must be scheduled in *one* of the given timeslots
@@ -153,6 +162,26 @@ def generate_timetables(activities)
     timetables = _build_timetables(activities.find_all { |a| not a.single_slot? }, []) 
     return timetables.map       { |timeslots| Timetable.new(timeslots + locked_timeslots) }
                      .sort_by   { |timeslot| timeslot.clashes }
+end
+
+# Compute the average clash count for each timeslot in the timetable set
+def compute_average_clashes(timetables)
+    # Return format:
+    # {
+    # timeslot => { count => n, clash_sum => n },
+    # ...
+    # }
+    prelim = timetables.each_with_object({}) do |tt, data|
+        tt.times.each do |ts|
+            data[ts] = { :count => 0, :clash_sum => 0 } if data[ts].nil? 
+            data[ts][:count] += 1
+            data[ts][:clash_sum] += tt.clashes
+        end
+    end
+
+    return prelim.each_with_object({}) do |a, data|
+        data[a[0]] = a[1][:clash_sum] / a[1][:count]
+    end
 end
 
 # Create array of activities from YAML (verbose format)
