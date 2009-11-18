@@ -8,9 +8,7 @@ DAYS = [ :monday, :tuesday, :wednesday, :thursday, :friday ]
 def time_format(time)
     hour = time.to_i
     minute = (60*(time - hour)).to_i
-    minute = "0"+minute.to_s if minute < 10
-    hour   = "0"+hour.to_s   if hour < 10
-    return "#{hour}:#{minute}"
+    sprintf "%02i:%02i", hour, minute
 end
 
 # A possible timeslot for a particular activity
@@ -55,7 +53,10 @@ class Timeslot
     end
 
     def to_s
-        return "#{activity}\t#{day.to_s.capitalize[0..2]} @ #{time_format(time)} to #{time_format(time+length)}"
+        day_str = @day.to_s.capitalize[0..2]
+        start   = time_format(@time)
+        finish  = time_format(@time + @length)
+        return "#{activity}\t#{day_str} @ #{start} to #{finish}"
     end
 end
 
