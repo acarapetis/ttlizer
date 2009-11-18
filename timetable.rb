@@ -42,9 +42,9 @@ class Timeslot
         return 0 if a.day != b.day
         a, b = b, a if a > b
 
-        val = a.length - (b.time - a.time)
-        val = 0 if val < 0
-        return val
+        return 0                            if a.time + a.length < b.time
+        return a.time - b.time + a.length   if a.time + a.length < b.time + b.length
+        return b.length
     end
 
     # Do these two activities overlap?
@@ -112,6 +112,20 @@ end
 # Formatted string representation of a set of timeslots
 def format_timetable(timeslots)
     timeslots.sort.join "\n"
+end
+
+# Visual "calendar" layout of a set of timeslots (ASCII)
+def visual_timetable(timeslots)
+    ret = (0 .. 18).map{|n| sprintf "|%3i", n}.join('') + "\n"
+    lines = ([[0]*19] * 5).map{|a| a.dup}
+    timeslots.each do |t|
+        puts "#{DAYS.index(t.day)} #{t.time} #{t.length}"
+        (t.time.floor .. t.time.floor + t.length.floor - 1).each do |n|
+            lines[DAYS.index(t.day)][n] += 1
+        end
+    end
+    ret += lines.map{|a| a.map{|c| c.to_s * 4}.join ''}.join "\n"
+    return ret
 end
 
 # Create array of activities from YAML (verbose format)
