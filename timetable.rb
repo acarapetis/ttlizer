@@ -63,6 +63,7 @@ end
 # An activity that must be scheduled in *one* of the given timeslots
 class Activity
     attr_reader :times, :name
+
     def initialize(name, times)
         @times = times.map do |t| 
             # Allow each element to be specified as a 2-el array
@@ -76,6 +77,10 @@ class Activity
         end
         @name = name
         @times.each {|t| t.activity = name}
+    end
+
+    def single_slot?
+        @times.length == 1
     end
 end
 
@@ -141,8 +146,9 @@ end
 
 # Generate all possible timetable combinations using the given activity set
 def generate_timetables(activities)
-    timetables = _build_timetables(activities.dup, []) 
-    return timetables.map       { |timeslots| Timetable.new timeslots }
+    locked_timeslots = activities.find_all{ |a| a.single_slot? }.map{ |a| a.times[0] }
+    timetables = _build_timetables(activities.find_all { |a| not a.single_slot? }, []) 
+    return timetables.map       { |timeslots| Timetable.new(timeslots + locked_timeslots) }
                      .sort_by   { |timeslot| timeslot.clashes }
 end
 
