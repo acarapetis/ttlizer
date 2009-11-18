@@ -105,7 +105,10 @@ class Timetable
 
     # Flat ASCII Timetable with details
     def detailed_text
-        @times.sort.join "\n"
+        @times.sort.map do |t| 
+            clash = ( @times.map{ |a| a.overlap? t }.count(true) > 1 )
+            "#{t} #{ clash ? 'CLASH' : '' }"
+        end.join "\n"
     end
 
     # Visual "calendar" layout of a set of timeslots (ASCII)
