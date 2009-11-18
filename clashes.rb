@@ -31,7 +31,7 @@ granularity = 1 if granularity.nil? or granularity == 0
 # Load activities, generate timetables and count clashes
 activities = load_activities_from_simple_yaml ARGF.read
 timetables = generate_timetables(activities)
-clashes = timetables.map { |tt| tt[:clashes] }
+clashes = timetables.map { |tt| tt.clashes }
 
 # Build histogram from array of clash counts
 clash_frequencies = (clashes.min.floor .. clashes.max.floor)
