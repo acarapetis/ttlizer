@@ -38,6 +38,6 @@ Planned features:
 - Customizable weighting for all criteria
 
 Contact:
-Anthony Carapetis
-anthony [dot] carapetis [at] gmail [dot] com
-http://github.com/amdpox
+    Anthony Carapetis
+    anthony [dot] carapetis [at] gmail [dot] com
+    http://github.com/amdpox
