@@ -9,7 +9,15 @@ analysis routines.
 
 require 'yaml'
 
-DAYS = [ :monday, :tuesday, :wednesday, :thursday, :friday ]
+DAYS = [ 
+    :monday, 
+    :tuesday, 
+    :wednesday, 
+    :thursday, 
+    :friday, 
+    :saturday, 
+    :sunday 
+]
 
 # Convert an hour-of-day to a human-readable 24h time
 def time_format(time)
