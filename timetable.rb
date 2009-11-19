@@ -1,5 +1,12 @@
 #!/usr/bin/env ruby
 
+=begin rdoc
+timetable.rb: core library
+
+This is the guts of ttlizer - class definitions, utility functions, and the
+analysis routines.
+=end
+
 require 'yaml'
 
 DAYS = [ :monday, :tuesday, :wednesday, :thursday, :friday ]
