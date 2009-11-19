@@ -1,7 +1,10 @@
 #!/usr/bin/ruby
 
 =begin rdoc
-mutts2yaml.rb: converts MUTTS flat html timetable to YAML activity input file
+mutts2yaml.rb: converts MUTTS flat HTML timetable to YAML activity input file
+
+MUTTS is the Monash University TimeTable System - odds are this script is
+useless to you.  If you're at Monash, you're in luck - also, hah, small world.
 
 Usage:
     ./mutts2yaml.rb < saved-mutts-timetable.html > my-activities.yaml
