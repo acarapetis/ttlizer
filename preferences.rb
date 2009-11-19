@@ -15,7 +15,7 @@ tts  = generate_timetables acts
 aves = compute_average_clashes tts
 
 acts.each do |act|
-    # Preferences are only useful for activities with more than one available timeeslot
+    # Preferences are only useful for activities with more than one available timeslot
     next if act.times.length < 2 
 
     puts "#{act.name}:"
