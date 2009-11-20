@@ -31,7 +31,7 @@ Options:
 	--granularity int, -g int   : stepsize for clash histogram
 
 ## Implementation
-ttlizer currently rates combinations based on the following criteria:
+`ttlizer` currently rates combinations based on the following criteria:
 
 - Negative weighting for activity clashes
 
@@ -49,12 +49,12 @@ Planned features:
 - Customizable weighting for all criteria
 
 ## Performance Issues
-ttlizer can take a minute or more on my machine to calculate preference order
+`ttlizer` can take a minute or more on my machine to calculate preference order
 for inputs with many (>1000) possible timetable combinations - this can be
 somewhat mitigated by building a raw Marshal dump of the combinations once:
     ruby generate_timetables.rb < timeslots.yaml > timetables.dump
 
-You can then get the results you want with ttlizer by specifying
+You can then get the results you want with `ttlizer` by specifying
 `--format dump` and feeding it `timetables.dump`.
     
 
