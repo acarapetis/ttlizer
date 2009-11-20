@@ -11,13 +11,23 @@ time-consuming process that can be automated with a few simple rules.
 
 ## Usage
 While there is no graphical interface of any form, and even the basic
-functionality is still under construction, there are a few working scripts
-that provide some helpful information.  They all read an activity description
-file (see Input Format) as their primary argument (or from STDIN).
+functionality is still under construction, there is a command-line script
+(`ttlizer`) that exposes the current functionality.
 
-- `clashes.rb`: generate a histogram of clash frequency for all possible timetables
-- `best_timetable.rb`: find the best-rated possible timetable and display it
-- `preferences.rb`: generate a list of preferences for each activity (NOTE: preference listing is very naïve; I do not recommend you follow it blindly.)
+The output is dependent on the task given - if none is given; it's a no-op.
+
+Usage:
+	ttlizer [options] --task=<task> [input_file]
+
+Tasks:
+- preferences: show estimated ideal timeslot preferences
+- best_timetables: show the [count] highest ranking timetables
+- clashes: show a histogram/frequency plot of clash counts
+
+Options:
+	--format [timeslots|dump]   : input format; default is timeslots
+	--count <count>, -n <count> : used in best_timetables
+	--granularity int, -g int   : stepsize for clash histogram
 
 ## Implementation
 ttlizer currently rates combinations based on the following criteria:
@@ -36,6 +46,16 @@ Partially implemented features:
 Planned features:
 
 - Customizable weighting for all criteria
+
+## Performance Issues
+ttlizer can take a minute or more on my machine to calculate preference order
+for inputs with many (>1000) possible timetable combinations - this can be
+somewhat mitigated by building a raw Marshal dump of the combinations once:
+    ruby generate_timetables.rb < timeslots.yaml > timetables.dump
+
+You can then get the results you want with ttlizer by specifying
+`--format dump` and feeding it `timetables.dump`.
+    
 
 Contact:
     Anthony Carapetis
