@@ -2,6 +2,10 @@
 
 =begin rdoc
 ttcli.rb: CLI formatting functions for ttlizer
+
+This is a library full of functions to show analysis results at the command
+line - it basically encapsulates the logic and formatting from the old
+individual scripts (+clashes.rb+, +best_timetables.rb+, etc)
 =end
 
 require 'timetable'
