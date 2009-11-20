@@ -20,6 +20,7 @@ Usage:
 	ttlizer [options] --task=<task> [input_file]
 
 Tasks:
+
 - preferences: show estimated ideal timeslot preferences
 - best_timetables: show the [count] highest ranking timetables
 - clashes: show a histogram/frequency plot of clash counts
