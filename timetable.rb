@@ -233,3 +233,19 @@ def load_activities_from_simple_yaml(yaml_str)
         end)
     end
 end
+
+# Compile a list of timeslot preferences for each activity
+# Return format: {
+#   activity => [ timeslot, timeslot, ...] # sorted with best first
+# }
+def compute_preferences(activities, timetables)
+    averages = compute_average_clashes timetables
+    return activities.each_with_object({}) do |act, ret|
+        # Preferences are only useful for activities with more than one available timeslot
+        next if act.times.length < 2 
+
+        ret[act] = act.times.map     { |ts| [averages[ts], ts] }
+                            .sort_by { |e|   e[0] }
+                            .map     { |e|   e[1] }
+    end
+end

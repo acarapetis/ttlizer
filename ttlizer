@@ -1,0 +1,86 @@
+#!/usr/bin/env ruby
+
+=begin rdoc
+ttlizer: command-line interface
+
+This is the main interface to ttlizer - depending on the arguments, it reads
+either a YAML list of activities and their timeslots, or a pre-compiled Marshal
+database of the possible timetables (ie the ouput of generate_timetables.rb).
+
+The output is dependent on the task given - if none is given; it's a no-op.
+
+Usage:
+	ttlizer [options] --task=<task> [input_file]
+
+Tasks:
+- preferences: show estimated ideal timeslot preferences
+- best_timetables: show the [count] highest ranking timetables
+- clashes: show a histogram/frequency plot of clash counts
+
+Options:
+	--format [timeslots|dump]   : input format; default is timeslots
+	--count <count>, -n <count> : used in best_timetables
+	--granularity int, -g int   : stepsize for clash histogram
+=end
+
+require 'timetable'
+require 'ttcli'
+require 'optparse'
+
+# Default options
+options = {
+	:format      => 'timeslots',
+	:count       => 1,
+	:granularity => 1,
+	:task		 => nil,
+}
+
+# Read arguments
+OptionParser.new do |opts|
+    opts.banner = "Usage: ttlizer [options] [input_file]"
+
+    opts.on("-t", "--task [preferences|best_timetables|clashes]", "Task") do |t|
+        options[:task] = t || 1
+    end
+
+    opts.on("-f", "--format [timeslots|dump]", "Input format") do |i|
+        options[:format] = i || 1
+    end
+
+    opts.on("-n", "--count [count]", "Number of timetables to display") do |c|
+        options[:count] = c.to_i || 1
+    end
+
+    opts.on("-g", "--granularity [granularity]", "Count-space stepsize") do |g|
+        options[:granularity] = g.to_f || 1
+    end
+end.parse!
+
+# Make sure a task is given
+if not %w{preferences best_timetables clashes}.include? options[:task] then
+	STDERR.puts "Task must be one of { preferences, best_timetables, clashes }"
+	exit
+end
+
+# Get list of activities and timetables
+activities, timetables = *case options[:format]
+when 'timeslots'
+	a = load_activities_from_simple_yaml(ARGF.read)
+    [a, generate_timetables(a)]
+when 'dump'
+	dump = Marshal.load(ARGF.read)
+    [dump[:activities], dump[:timetables]]
+else
+	STDERR.puts "Input should be 'dump' or 'timeslots'"
+    exit
+end
+
+# Call task
+case options[:task]
+when 'preferences'
+	display_preferences(activities, timetables)
+when 'best_timetables'
+	show_best_timetables(timetables, options[:count])
+when 'clashes'
+	show_clash_histogram(timetables, options[:granularity])
+end
