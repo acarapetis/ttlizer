@@ -52,7 +52,7 @@ activities = data.each_with_object({}) do |d, a|
     time = time.to_f
     length = length.to_f
 
-    time += 12 if ampm =~ /PM/i
+    time += 12 if ampm =~ /PM/i and time != 12
     
     a[name] = [] if a[name].nil?
     a[name] << [day, time, length].join(' ')
