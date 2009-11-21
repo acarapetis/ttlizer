@@ -150,33 +150,21 @@ class Timetable
     end
 end
 
-# Recursively build the timetable combinations
-# NOTE: this modifies remaining_activities, should only be called by 
-# generate_timetables or by itself
-def _build_timetables(remaining_activities, timetables)
-    # This implementation is *very* ugly.
-    # TODO: tidy it up!
-    activity = remaining_activities.shift # grab the next activity
-    if timetables.length == 0 
-        # This is the first call in the chain, just recurse with the first 
-        # activity set:
-        return _build_timetables(remaining_activities, activity.times.map{|x| [x]})
-    elsif remaining_activities.length == 0 
-        # This is the last call in the chain - don't recurse
-        return timetables.map{ |a| activity.times.map{ |x| a+[x] }}.flatten(1)
-    else 
-        # recurse as usual
-        return _build_timetables(remaining_activities, 
-                timetables.map{ |a| activity.times.map{ |x| a+[x] }}.flatten(1))
-    end
-end
-
 # Generate all possible timetable combinations using the given activity set
 def generate_timetables(activities)
-    locked_timeslots = activities.find_all{ |a| a.single_slot? }.map{ |a| a.times[0] }
-    timetables = _build_timetables(activities.find_all { |a| not a.single_slot? }, []) 
-    return timetables.map       { |timeslots| Timetable.new(timeslots + locked_timeslots) }
-                     .sort_by   { |timeslot| timeslot.clashes }
+    # First, grab the activities where there's only one choice of timeslot:
+    locked_timeslots = activities.find_all{ |a| a.single_slot? }
+                                 .map     { |a| a.times.first }
+
+    combiner = lambda { |acc, act| 
+        act.times.each_with_object([]) { |t, a| acc.each { |y| a << y + [t] } }
+    }
+
+    # Compute results
+    activities.find_all{ |a| not a.single_slot? } # take activities with options
+              .inject([[]], &combiner) # generate all the possible combinations
+              .map     { |ts| Timetable.new(ts + locked_timeslots) }
+              .sort_by { |timeslot| timeslot.clashes }
 end
 
 # Compute the average clash count for each timeslot in the timetable set
