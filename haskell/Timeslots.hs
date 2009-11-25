@@ -1,3 +1,4 @@
+-- Timeslots.hs: dummy data for testing
 module Timeslots
 ( activities
 ) where
