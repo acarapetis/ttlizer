@@ -22,4 +22,3 @@ promises to be much faster than the ruby equivelant.  See
 
     Anthony Carapetis
     anthony [dot] carapetis [at] gmail [dot] com
-    http://github.com/amdpox
