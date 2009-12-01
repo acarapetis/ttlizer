@@ -10,21 +10,31 @@ individual scripts (+clashes.rb+, +best_timetables.rb+, etc)
 
 require 'timetable'
 
-def display_preferences(activities, timetables)
-    #p compute_preferences(activities, timetables)
-    puts compute_preferences(activities, timetables).map{ |a, ts|
+def display_preferences(activities, timetables, weight)
+    puts compute_weighted_preferences(
+            activities, timetables, weight).map{ |a, ts|
+        
         "#{a.name}:\n" + ts.each_with_index.map{ |t, i| 
             n = sprintf "%2i", i+1
             "\t#{n}: #{t}"
         }.join("\n")
+
     }.join("\n")
 end
 
-def show_best_timetables(timetables, count)
-    puts timetables.sort_by{ |tt| tt.clashes }
+def show_best_timetables(timetables, count, weight)
+    weight ||= ->(t) { [ 
+        -t.days_off, # First priority
+        t.hours_required + 5 * t.clashes
+    ] }
+
+    puts timetables.sort_by(&weight)
                    .first(count)
                    .each_with_index.map { |tt, i|
-                       "Timetable ##{i+1}:\n" + tt.detailed_text 
+                       "Timetable ##{i+1}:\n" + 
+                       " * Clashes: #{tt.clashes}\n" +
+                       " * Block hours: #{tt.hours_required}\n" +
+                       tt.detailed_text + "\n\n" + tt.visual_layout
                    }.join("\n\n")
 end
 

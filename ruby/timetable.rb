@@ -127,6 +127,21 @@ class Timetable
         @times.combination(2).map{|a,b| a.overlap(b)}.inject(&:+)
     end
 
+    # Number of days with no classes
+    def days_off
+        (DAYS - @times.map(&:day).uniq).length
+    end
+
+    # Total hours away from 'home' including gaps
+    def hours_required
+        @times.map(&:day).uniq.map {|day|
+            timeslots = @times.select {|t| t.day == day}
+            start  = timeslots.min_by {|t| t.time }
+            finish = timeslots.max_by {|t| t.time + t.length }
+            finish.time + finish.length - start.time
+        }.inject(&:+)
+    end
+
     # Flat ASCII Timetable with details
     def detailed_text
         @times.sort.map do |t| 
@@ -140,7 +155,6 @@ class Timetable
         ret = (0 .. 18).map{|n| sprintf "|%3i", n}.join('') + "\n"
         lines = ([[0]*19] * 5).map{|a| a.dup}
         @times.each do |t|
-            puts "#{DAYS.index(t.day)} #{t.time} #{t.length}"
             (t.time.floor .. t.time.floor + t.length.floor - 1).each do |n|
                 lines[DAYS.index(t.day)][n] += 1
             end
@@ -167,23 +181,35 @@ def generate_timetables(activities)
               .sort_by { |timeslot| timeslot.clashes }
 end
 
-# Compute the average clash count for each timeslot in the timetable set
-def compute_average_clashes(timetables)
-    # Return format:
-    # {
-    # timeslot => { count => n, clash_sum => n },
-    # ...
-    # }
+# Take an array of weights in order of importance and generate a single
+# weigh index from them.
+def flatten_weight(weights)
+    if weights.is_a? Array then
+        ret = 0
+        mult = 1
+        while w = weights.pop do
+            ret += w * mult
+            mult *= 1000
+        end
+        return ret
+    else
+        return weights
+    end
+end
+
+# Use the given weight lambda to compute the weights of all timeslots in
+# the set of timetables.
+def compute_weights(timetables, weight)
     prelim = timetables.each_with_object({}) do |tt, data|
         tt.times.each do |ts|
-            data[ts] = { :count => 0, :clash_sum => 0 } if data[ts].nil? 
+            data[ts] = { :count => 0, :weight_sum => 0 } if data[ts].nil? 
             data[ts][:count] += 1
-            data[ts][:clash_sum] += tt.clashes
+            data[ts][:weight_sum] += flatten_weight(weight.call(tt));
         end
     end
 
     return prelim.each_with_object({}) do |a, data|
-        data[a[0]] = a[1][:clash_sum] / a[1][:count]
+        data[a[0]] = a[1][:weight_sum] / a[1][:count]
     end
 end
 
@@ -222,18 +248,16 @@ def load_activities_from_simple_yaml(yaml_str)
     end
 end
 
-# Compile a list of timeslot preferences for each activity
+# Compile a list of timeslot preferences for each activity using a weighting
+# function
 # Return format: {
 #   activity => [ timeslot, timeslot, ...] # sorted with best first
 # }
-def compute_preferences(activities, timetables)
-    averages = compute_average_clashes timetables
-    return activities.each_with_object({}) do |act, ret|
-        # Preferences are only useful for activities with more than one available timeslot
-        next if act.times.length < 2 
+def compute_weighted_preferences(activities, timetables, weight)
+    weights = compute_weights(timetables, weight)
 
-        ret[act] = act.times.map     { |ts| [averages[ts], ts] }
-                            .sort_by { |e|   e[0] }
-                            .map     { |e|   e[1] }
+    return activities.each_with_object({}) do |act, ret|
+        next if act.times.length < 2 
+        ret[act] = act.times.sort_by { |ts| weights[ts] }
     end
 end
