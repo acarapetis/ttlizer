@@ -35,6 +35,7 @@ options = {
 	:task		        => nil,
     :clash_weight       => 5,
     :hometime_weight    => 1,
+    :days_off_weight    => 5,
 }
 
 # Read arguments
@@ -57,20 +58,25 @@ OptionParser.new do |opts|
         options[:granularity] = g.to_f || 1
     end
 
-    opts.on('-C', '--clash-weight [weight]', 'Weight on avoiding clashes') do |c|
-        options[:clash_weight] = c.to_f || 1
+    opts.on('-C', '--clash-weight [weight]', 'Negative weight per hours of clashes (default 5)') do |c|
+        options[:clash_weight] = c.to_f || 5
     end
 
-    opts.on('-H', '--hometime-weight [weight]', 'Weight on hours "at home"') do |h|
+    opts.on('-H', '--hometime-weight [weight]', 'Positive weight per hour "at home" (default 1)') do |h|
         options[:hometime_weight] = h.to_f || 1
+    end
+
+    opts.on('-D', '--days-off-weight [weight]', 'Positive weight per day off (default 10)') do |d|
+        options[:days_off_weight] = d.to_f || 5
     end
 end.parse!
 
-weight_lambda = ->(t) {[
-    -t.days_off,
+# Weighting function
+weight_lambda = lambda { |t|
+    -t.days_off      * options[:days_off_weight] +
     t.hours_required * options[:hometime_weight] +
     t.clashes        * options[:clash_weight]
-]}
+}
 
 # Make sure a task is given
 if not %w{preferences best_timetables clashes}.include? options[:task] then
