@@ -149,6 +149,72 @@ class Timetable
             "#{t} #{ clash ? 'CLASH' : '' }"
         end.join "\n"
     end
+    
+    # Calendar-style layout (just a data structure)
+    # returns: {
+    #   :start    => first hour,
+    #   :end      => last hour,
+    # },
+    # [
+    #   { # first day
+    #       :text   => text,
+    #       :length => length,
+    #   }, #...
+    # ]
+    def calendar_layout
+        info = {
+            :start    => @times.map{|t| t.time}.min,
+            :end      => @times.map{|t| t.time + t.length}.max,
+        }
+        day_length = info[:end] - info[:start]
+
+        ret = DAYS.map do |day|
+            day_timeslots = @times.select{|t| t.day == day}.sort_by{|t| t.time}
+            if day_timeslots.length == 0
+                [{ :text => '', :length => day_length }]
+            else
+                r = []
+                t = info[:start]
+                while t < info[:end]
+                    sl = day_timeslots.shift
+                    if sl.nil?
+                        r << { :text => '', :length => info[:end] - t }
+                        break
+                    else
+                        r << { :text => '', :length => sl.time - t } if sl.time > t
+                        r << { :text => sl.activity, :length => sl.length }
+                        t = sl.time + sl.length
+                    end
+                end
+                r
+            end
+        end
+        return info, ret
+    end
+
+    def html_calendar(stepsize)
+        info, data = calendar_layout
+
+        ret = %w{<table> <tr>}
+        ret << '<th>DAY\time</th>'
+        (info[:start] .. info[:end]).step(stepsize).each do |t|
+            ret << "<th>#{t}</th>"
+        end
+        ret << '</tr>'
+
+        DAYS.each_with_index do |day, i|
+            ret << '<tr>'
+            ret << "<th>#{day}</th>"
+            data[i].each do |slot|
+                span, text = slot[:length] / stepsize, slot[:text]
+                ct = ( slot[:text] == '' ? '' : 'class="boxed" ' )
+                ret << %Q[<td #{ct}colspan="#{span.to_i}">#{text}</td>]
+            end
+            ret << '</tr>'
+        end
+        ret << '</table>'
+        return ret.join "\n"
+    end
 
     # Visual "calendar" layout of a set of timeslots (ASCII)
     def visual_layout
