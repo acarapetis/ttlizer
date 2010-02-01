@@ -2,9 +2,9 @@
 ### Ruby Implementation ###
 
 ## Introduction
-This is the ruby implementation of ttlizer, and will probably not be of much
-use for much longer - the plan is to completely replace it with the
-Haskell version.
+This is the ruby implementation of ttlizer, which I thought would probably not be of much
+use for much longer - but the Haskell implementation isn't usable yet, and this is (after
+a fashion).
 
 ## Usage
 While there is no graphical interface of any form, and even the basic
