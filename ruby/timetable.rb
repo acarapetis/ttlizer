@@ -62,6 +62,16 @@ class Timeslot
         return b.length
     end
 
+    def simple_overlap?(b)
+        a = {
+            :start => @time,
+            :end   => @time + @length,
+        }
+        a, b = b, a if a[:start] > b[:start]
+
+        not a[:end] <= b[:start]
+    end
+
     # Do these two activities overlap?
     def overlap?(other)
         return self.overlap(other) > 0
@@ -162,34 +172,58 @@ class Timetable
     #   }, #...
     # ]
     def calendar_layout
+        # Holy megafunction, batman
         info = {
             :start    => @times.map{|t| t.time}.min,
             :end      => @times.map{|t| t.time + t.length}.max,
         }
-        day_length = info[:end] - info[:start]
 
         ret = DAYS.map do |day|
             day_timeslots = @times.select{|t| t.day == day}.sort_by{|t| t.time}
-            if day_timeslots.length == 0
-                [{ :text => '', :length => day_length }]
-            else
-                r = []
-                t = info[:start]
-                while t < info[:end]
-                    sl = day_timeslots.shift
-                    if sl.nil?
-                        r << { :text => '', :length => info[:end] - t }
-                        break
-                    else
-                        r << { :text => '', :length => sl.time - t } if sl.time > t
-                        r << { :text => sl.activity, :length => sl.length }
-                        t = sl.time + sl.length
-                    end
+            day_loop(info, day_timeslots)
+        end
+
+        return info, ret
+    end
+
+    def split_to_rows(day_timeslots)
+        day_timeslots.each_with_object([]) do |sl, r|
+            done = false
+            r.each do |rr|
+                if rr.none? {|ts| sl.overlap? ts} and not done then
+                    done = true
+                    rr << sl
                 end
-                r
+            end
+            if not done then
+                r << [ sl ]
             end
         end
-        return info, ret
+    end
+
+    def day_loop(info, day_timeslots)
+        day_length = info[:end] - info[:start]
+        if day_timeslots.length == 0 then
+            return [[{ :text => '', :length => info[:end] - info[:start] }]]
+        end
+
+        rows = split_to_rows(day_timeslots)
+        return rows.map do |row|
+            r = []
+            t = info[:start]
+            while t < info[:end]
+                sl = row.shift
+                if sl.nil?
+                    r << { :text => '', :length => info[:end] - t }
+                    break
+                else
+                    r << { :text => '', :length => sl.time - t } if sl.time > t
+                    r << { :text => sl.activity, :length => sl.length }
+                    t = sl.time + sl.length
+                end
+            end
+            r
+        end
     end
 
     def html_calendar(stepsize)
@@ -197,20 +231,28 @@ class Timetable
 
         ret = %w{<table> <tr>}
         ret << '<th>DAY\time</th>'
-        (info[:start] .. info[:end]).step(stepsize).each do |t|
-            ret << "<th>#{t}</th>"
+        (info[:start] .. info[:end]-stepsize).step(stepsize).each do |t|
+            time = time_format(t)
+            ret << "<th>#{time}</th>"
         end
         ret << '</tr>'
 
         DAYS.each_with_index do |day, i|
-            ret << '<tr>'
-            ret << "<th>#{day}</th>"
-            data[i].each do |slot|
-                span, text = slot[:length] / stepsize, slot[:text]
-                ct = ( slot[:text] == '' ? '' : 'class="boxed" ' )
-                ret << %Q[<td #{ct}colspan="#{span.to_i}">#{text}</td>]
+            first = true
+            data[i].each do |row|
+                cls = first ? 'firstrow' : ''
+                ret << %Q{<tr class="#{cls}">}
+                if first then
+                    ret << %Q{<th rowspan="#{data[i].length}">#{day}</th>}
+                end
+                row.each do |slot|
+                    span, text = slot[:length] / stepsize, slot[:text]
+                    ct = ( slot[:text] == '' ? '' : %Q{class="boxed"} )
+                    ret << %Q[<td #{ct}colspan="#{span.to_i}">#{text}</td>]
+                end
+                ret << '</tr>'
+                first = false
             end
-            ret << '</tr>'
         end
         ret << '</table>'
         return ret.join "\n"
