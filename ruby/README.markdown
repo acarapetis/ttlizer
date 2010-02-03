@@ -7,7 +7,9 @@ use for much longer - the plan is to completely replace it with the
 Haskell version.
 
 ## Usage
-While there is no graphical interface of any form, and even the basic
+
+### CLI script
+While there is no unified graphical interface of any form, and even the basic
 functionality is still under construction, there is a command-line script
 (`ttlizer`) that exposes the current functionality.
 
@@ -27,13 +29,17 @@ Options:
 	--count <count>, -n <count> : used in best_timetables
 	--granularity int, -g int   : stepsize for clash histogram
 
+### CGI script
+If all you want is the list of best timetables and you have a webserver (eg
+Apache) installed, you can get HTML-formatted output by placing `ttlizer.cgi`
+and `timetable.rb` in your cgi-bin directory and navigating to
+
+    http://localhost/cgi-bin/ttlizer.cgi?url=PATH_TO_INPUT.yaml&count=5
+
 ## Implementation
 `ttlizer` currently rates combinations based on the following criteria:
 
 - Negative weighting for activity clashes
-
-The project is still in very early stages; planned criteria for the future:
-
 - Negative weighting for large gaps in between activities
 - Positive weighting for days with no activities scheduled
 
