@@ -34,15 +34,24 @@ def main
     File.exist? $r['url'] or
         raise "#{$r['url']} does not exist!"
 
+    count = $r['count'].to_i || 1
+    count = 1 if count == 0
+
     data = load_activities_from_simple_yaml File.read $r['url']
 
     puts start_html "ttlizer CGI test"
-    puts '<h1>Best Calendar</h1>'
+    puts "<h1>#{count} best calendar#{ count > 1 ? 's' : '' }</h1>"
 
-    puts generate_timetables(data).min_by{|t| [
+    timetables = generate_timetables(data).sort_by{|t| [
         -t.days_off, # First priority
-        2*t.hours_required + 5 * t.clashes
-    ]}.html_calendar(0.5)
+        t.hours_required + 5 * t.clashes
+    ]}
+    
+    timetables.take(count).each do |tt| 
+        puts %Q{<p>Hours required: #{tt.hours_required}, Clashes: #{tt.clashes}</p>}
+        puts tt.html_calendar(0.5)
+        puts '<br />'
+    end
 
     puts <<END_HTML
         </body>
